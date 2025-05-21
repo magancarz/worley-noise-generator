@@ -1,7 +1,5 @@
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-
 #include "WorleyNoiseGenerator.h"
+#include "WorleyNoiseTextureWriter.h"
 
 int main()
 {
@@ -12,14 +10,8 @@ int main()
 
     wng::WorleyNoiseGenerator worley_noise_generator{worley_noise_settings};
     wng::WorleyNoiseTexture<wng::WorleyNoisePixel> worley_noise_texture = worley_noise_generator.generate();
-
-    stbi_write_png(
-        "worley_noise.png",
-        worley_noise_settings.width,
-        worley_noise_settings.height,
-        4,
-        worley_noise_texture.data.data(),
-        worley_noise_settings.width * 4);
+    std::filesystem::path file_path{"worley_noise_512x512.png"};
+    wng::WorleyNoiseTextureWriter::saveToPNG(worley_noise_texture, file_path);
 
     return 0;
 }
