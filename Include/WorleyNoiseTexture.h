@@ -29,8 +29,8 @@ namespace wng
     template <typename PixelType>
     struct WorleyNoiseTexture
     {
-        unsigned int width{0};
-        unsigned int height{0};
+        int width{0};
+        int height{0};
         std::vector<PixelType> data;
     };
 }

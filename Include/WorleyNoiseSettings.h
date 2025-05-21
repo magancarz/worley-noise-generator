@@ -29,5 +29,6 @@ namespace wng
         int width{0};
         int height{0};
         int grid_size{0};
+        int num_of_octaves{0};
     };
 }

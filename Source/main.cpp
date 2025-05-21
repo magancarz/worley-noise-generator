@@ -4,9 +4,10 @@
 int main()
 {
     wng::WorleyNoiseSettings worley_noise_settings{};
-    worley_noise_settings.width = 512;
-    worley_noise_settings.height = 512;
+    worley_noise_settings.width = 1024;
+    worley_noise_settings.height = 1024;
     worley_noise_settings.grid_size = 8;
+    worley_noise_settings.num_of_octaves = 5;
 
     wng::WorleyNoiseGenerator worley_noise_generator{worley_noise_settings};
     wng::WorleyNoiseTexture<wng::WorleyNoisePixel> worley_noise_texture = worley_noise_generator.generate();

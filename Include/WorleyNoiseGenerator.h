@@ -34,11 +34,14 @@ namespace wng
     public:
         explicit WorleyNoiseGenerator(const WorleyNoiseSettings& worley_noise_settings);
 
-        WorleyNoiseTexture<WorleyNoisePixel> generate() const;
+        [[nodiscard]] WorleyNoiseTexture<WorleyNoisePixel> generate() const;
 
     private:
         WorleyNoiseSettings worley_noise_settings;
-
-        std::vector<WorleyNoisePoint> generateWorleyNoisePoints() const;
+        [[nodiscard]] static bool settingsValid(const WorleyNoiseSettings& worley_noise_settings);
+        [[nodiscard]] std::vector<WorleyNoisePoint> generateWorleyNoisePoints(const WorleyNoiseSettings& worley_noise_settings) const;
+        [[nodiscard]] WorleyNoiseTexture<WorleyNoisePixel> generateTexture(const WorleyNoiseSettings& worley_noise_settings) const;
+        [[nodiscard]] WorleyNoiseTexture<WorleyNoisePixel> compositeWorleyNoiseTexture(
+            const std::vector<WorleyNoiseTexture<WorleyNoisePixel>>& worley_noise_textures) const;
     };
 }

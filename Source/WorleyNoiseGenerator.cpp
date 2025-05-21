@@ -23,6 +23,7 @@
 #include "WorleyNoiseGenerator.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <random>
 
@@ -36,57 +37,38 @@ namespace wng
 
     WorleyNoiseTexture<WorleyNoisePixel> WorleyNoiseGenerator::generate() const
     {
-        assert(worley_noise_settings.width % worley_noise_settings.grid_size == 0 &&
-               worley_noise_settings.height % worley_noise_settings.grid_size == 0);
-
-        WorleyNoiseTexture<WorleyNoisePixel> worley_noise_texture{};
-        worley_noise_texture.width = worley_noise_settings.width;
-        worley_noise_texture.height = worley_noise_settings.height;
-        worley_noise_texture.data = std::vector<WorleyNoisePixel>(worley_noise_texture.width * worley_noise_texture.height);
-
-        const float grid_size = static_cast<float>(worley_noise_texture.width) / static_cast<float>(worley_noise_settings.grid_size);
-        const float inv_max_distance = 1.0f / (std::sqrt(2.0f) * grid_size);
-
-        std::vector<WorleyNoisePoint> worley_noise_points = generateWorleyNoisePoints();
-        for (int pixel_y = 0; pixel_y < worley_noise_texture.height; ++pixel_y)
+        if (!settingsValid(worley_noise_settings))
         {
-            for (int pixel_x = 0; pixel_x < worley_noise_texture.width; ++pixel_x)
-            {
-                int grid_x = pixel_x / grid_size;
-                int grid_y = pixel_y / grid_size;
-
-                WorleyNoisePoint pixel_as_point{};
-                pixel_as_point.x = static_cast<float>(pixel_x);
-                pixel_as_point.y = static_cast<float>(pixel_y);
-
-                float min_distance = 1.0f;
-                for (int point_y = -1; point_y <= 1; ++point_y)
-                {
-                    for (int point_x = -1; point_x <= 1; ++point_x)
-                    {
-                        int final_point_x = (grid_x + point_x + worley_noise_settings.grid_size) % worley_noise_settings.grid_size;
-                        int final_point_y = (grid_y + point_y + worley_noise_settings.grid_size) % worley_noise_settings.grid_size;
-                        unsigned int point_index = final_point_y * worley_noise_settings.grid_size + final_point_x;
-                        WorleyNoisePoint& worley_noise_point = worley_noise_points.at(point_index);
-                        float distance = worley_noise_point.distance(pixel_as_point) * inv_max_distance;
-                        min_distance = std::min(distance, min_distance);
-                    }
-                }
-
-                float inverted_value = 1.0f - min_distance;
-                auto pixel_value = static_cast<unsigned char>(inverted_value * 255.0f);
-                unsigned int pixel_index = pixel_y * worley_noise_settings.width + pixel_x;
-                worley_noise_texture.data.at(pixel_index).data[0] = pixel_value;
-                worley_noise_texture.data.at(pixel_index).data[1] = pixel_value;
-                worley_noise_texture.data.at(pixel_index).data[2] = pixel_value;
-                worley_noise_texture.data.at(pixel_index).data[3] = 255;
-            }
+            return WorleyNoiseTexture<WorleyNoisePixel>{};
         }
 
-        return worley_noise_texture;
+        std::vector<WorleyNoiseTexture<WorleyNoisePixel>> worley_noise_textures;
+        worley_noise_textures.resize(worley_noise_settings.num_of_octaves);
+
+        int last_grid_size = worley_noise_settings.grid_size;
+        for (auto& texture : worley_noise_textures)
+        {
+            WorleyNoiseSettings current_worley_noise_settings = worley_noise_settings;
+            current_worley_noise_settings.grid_size = last_grid_size;
+            texture = generateTexture(current_worley_noise_settings);
+
+            last_grid_size *= 2;
+        }
+
+        return compositeWorleyNoiseTexture(worley_noise_textures);
     }
 
-    std::vector<WorleyNoisePoint> WorleyNoiseGenerator::generateWorleyNoisePoints() const
+    bool WorleyNoiseGenerator::settingsValid(const WorleyNoiseSettings& worley_noise_settings)
+    {
+        bool grid_size_valid =
+            worley_noise_settings.width % worley_noise_settings.grid_size == 0 &&
+            worley_noise_settings.height % worley_noise_settings.grid_size == 0;
+        bool valid_num_of_octaves = worley_noise_settings.num_of_octaves > 0;
+
+        return grid_size_valid && valid_num_of_octaves;
+    }
+
+    std::vector<WorleyNoisePoint> WorleyNoiseGenerator::generateWorleyNoisePoints(const WorleyNoiseSettings& worley_noise_settings) const
     {
         std::random_device device;
         std::mt19937 generator{device()};
@@ -108,4 +90,99 @@ namespace wng
 
         return worley_noise_points;
     }
+
+    WorleyNoiseTexture<WorleyNoisePixel> WorleyNoiseGenerator::generateTexture(const WorleyNoiseSettings& worley_noise_settings) const
+    {
+        WorleyNoiseTexture<WorleyNoisePixel> worley_noise_texture{};
+        worley_noise_texture.width = worley_noise_settings.width;
+        worley_noise_texture.height = worley_noise_settings.height;
+        worley_noise_texture.data = std::vector<WorleyNoisePixel>(worley_noise_texture.width * worley_noise_texture.height);
+
+        const int grid_size = worley_noise_texture.width / worley_noise_settings.grid_size;
+        const float inv_max_distance = 1.0f / (std::sqrt(2.0f) * static_cast<float>(grid_size));
+
+        std::vector<WorleyNoisePoint> worley_noise_points = generateWorleyNoisePoints(worley_noise_settings);
+        for (int pixel_y = 0; pixel_y < worley_noise_texture.height; ++pixel_y)
+        {
+            for (int pixel_x = 0; pixel_x < worley_noise_texture.width; ++pixel_x)
+            {
+                int grid_x = pixel_x / grid_size;
+                int grid_y = pixel_y / grid_size;
+
+                WorleyNoisePoint pixel_as_point{};
+                pixel_as_point.x = static_cast<float>(pixel_x);
+                pixel_as_point.y = static_cast<float>(pixel_y);
+
+                float min_distance = 1.0f;
+                for (int point_z = -1; point_z <= 1; ++point_z)
+                {
+                    for (int point_y = -1; point_y <= 1; ++point_y)
+                    {
+                        for (int point_x = -1; point_x <= 1; ++point_x)
+                        {
+                            int final_point_x = (grid_x + point_x + worley_noise_settings.grid_size) % worley_noise_settings.grid_size;
+                            int final_point_y = (grid_y + point_y + worley_noise_settings.grid_size) % worley_noise_settings.grid_size;
+                            unsigned int point_index =
+                                final_point_y * worley_noise_settings.grid_size +
+                                final_point_x;
+                            WorleyNoisePoint& worley_noise_point = worley_noise_points.at(point_index);
+                            float distance = worley_noise_point.distance(pixel_as_point) * inv_max_distance;
+                            min_distance = std::min(distance, min_distance);
+                        }
+                    }
+                }
+
+                float inverted_value = 1.0f - min_distance;
+                auto pixel_value = static_cast<unsigned char>(inverted_value * 255.0f);
+                unsigned int pixel_index =
+                    + pixel_y * worley_noise_settings.width
+                    + pixel_x;
+                worley_noise_texture.data.at(pixel_index).data[0] = pixel_value;
+                worley_noise_texture.data.at(pixel_index).data[1] = pixel_value;
+                worley_noise_texture.data.at(pixel_index).data[2] = pixel_value;
+                worley_noise_texture.data.at(pixel_index).data[3] = 255;
+            }
+        }
+
+        return worley_noise_texture;
+    }
+
+    WorleyNoiseTexture<WorleyNoisePixel> WorleyNoiseGenerator::compositeWorleyNoiseTexture(
+        const std::vector<WorleyNoiseTexture<WorleyNoisePixel>>& worley_noise_textures) const
+    {
+        WorleyNoiseTexture<WorleyNoisePixel> worley_noise_texture{};
+        worley_noise_texture.width = worley_noise_settings.width;
+        worley_noise_texture.height = worley_noise_settings.height;
+        worley_noise_texture.data = std::vector<WorleyNoisePixel>(worley_noise_texture.width * worley_noise_texture.height);
+
+        for (int pixel_y = 0; pixel_y < worley_noise_texture.height; ++pixel_y)
+        {
+            for (int pixel_x = 0; pixel_x < worley_noise_texture.width; ++pixel_x)
+            {
+                std::array<unsigned int, 4> worley_noise_pixel{};
+
+                unsigned int pixel_index = pixel_y * worley_noise_texture.width + pixel_x;
+                for (auto& texture : worley_noise_textures)
+                {
+                    worley_noise_pixel[0] += static_cast<unsigned int>(texture.data.at(pixel_index).data[0]);
+                    worley_noise_pixel[1] += static_cast<unsigned int>(texture.data.at(pixel_index).data[1]);
+                    worley_noise_pixel[2] += static_cast<unsigned int>(texture.data.at(pixel_index).data[2]);
+                    worley_noise_pixel[3] += static_cast<unsigned int>(texture.data.at(pixel_index).data[3]);
+                }
+
+                worley_noise_pixel[0] /= worley_noise_textures.size();
+                worley_noise_pixel[1] /= worley_noise_textures.size();
+                worley_noise_pixel[2] /= worley_noise_textures.size();
+                worley_noise_pixel[3] /= worley_noise_textures.size();
+
+                worley_noise_texture.data.at(pixel_index).data[0] = static_cast<unsigned char>(worley_noise_pixel[0]);
+                worley_noise_texture.data.at(pixel_index).data[1] = static_cast<unsigned char>(worley_noise_pixel[1]);
+                worley_noise_texture.data.at(pixel_index).data[2] = static_cast<unsigned char>(worley_noise_pixel[2]);
+                worley_noise_texture.data.at(pixel_index).data[3] = static_cast<unsigned char>(worley_noise_pixel[3]);
+            }
+        }
+
+        return worley_noise_texture;
+    }
+
 }
