@@ -22,18 +22,17 @@
 
 #pragma once
 
-#include <filesystem>
-
-#include "WorleyNoisePixel.h"
+#include "WorleyNoiseData.h"
 #include "WorleyNoiseTexture.h"
 
 namespace wng
 {
-    class WorleyNoiseTextureWriter
+    class WorleyNoiseDataConverter
     {
     public:
-        static void saveToPNG(
-            const WorleyNoiseTexture& worley_noise_texture,
-            const std::filesystem::path& file_path);
+        static WorleyNoiseTexture convert(const WorleyNoiseData& worley_noise_data);
+
+    private:
+        static WorleyNoisePixel convertDataToPixel(float worley_noise_data);
     };
 }

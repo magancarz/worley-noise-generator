@@ -35,27 +35,27 @@ namespace wng
     WorleyNoiseGenerator::WorleyNoiseGenerator(const WorleyNoiseSettings& worley_noise_settings)
         : worley_noise_settings{worley_noise_settings} {}
 
-    WorleyNoiseTexture<WorleyNoisePixel> WorleyNoiseGenerator::generate() const
+    WorleyNoiseData WorleyNoiseGenerator::generate() const
     {
         if (!settingsValid(worley_noise_settings))
         {
-            return WorleyNoiseTexture<WorleyNoisePixel>{};
+            return WorleyNoiseData{};
         }
 
-        std::vector<WorleyNoiseTexture<WorleyNoisePixel>> worley_noise_textures;
-        worley_noise_textures.resize(worley_noise_settings.num_of_octaves);
+        std::vector<WorleyNoiseData> worley_noise_data_arrays;
+        worley_noise_data_arrays.resize(worley_noise_settings.num_of_octaves);
 
         int last_grid_size = worley_noise_settings.grid_size;
-        for (auto& texture : worley_noise_textures)
+        for (auto& worley_noise_data : worley_noise_data_arrays)
         {
             WorleyNoiseSettings current_worley_noise_settings = worley_noise_settings;
             current_worley_noise_settings.grid_size = last_grid_size;
-            texture = generateTexture(current_worley_noise_settings);
+            worley_noise_data = generateWorleyNoiseData(current_worley_noise_settings);
 
             last_grid_size *= 2;
         }
 
-        return compositeWorleyNoiseTexture(worley_noise_textures);
+        return compositeWorleyNoiseData(worley_noise_data_arrays);
     }
 
     bool WorleyNoiseGenerator::settingsValid(const WorleyNoiseSettings& worley_noise_settings)
@@ -91,20 +91,20 @@ namespace wng
         return worley_noise_points;
     }
 
-    WorleyNoiseTexture<WorleyNoisePixel> WorleyNoiseGenerator::generateTexture(const WorleyNoiseSettings& worley_noise_settings) const
+    WorleyNoiseData WorleyNoiseGenerator::generateWorleyNoiseData(const WorleyNoiseSettings& worley_noise_settings) const
     {
-        WorleyNoiseTexture<WorleyNoisePixel> worley_noise_texture{};
-        worley_noise_texture.width = worley_noise_settings.width;
-        worley_noise_texture.height = worley_noise_settings.height;
-        worley_noise_texture.data = std::vector<WorleyNoisePixel>(worley_noise_texture.width * worley_noise_texture.height);
+        WorleyNoiseData worley_noise_data{};
+        worley_noise_data.width = worley_noise_settings.width;
+        worley_noise_data.height = worley_noise_settings.height;
+        worley_noise_data.data = std::vector<float>(worley_noise_settings.width * worley_noise_settings.height);
 
-        const int grid_size = worley_noise_texture.width / worley_noise_settings.grid_size;
+        const int grid_size = worley_noise_data.width / worley_noise_settings.grid_size;
         const float inv_max_distance = 1.0f / (std::sqrt(2.0f) * static_cast<float>(grid_size));
 
         std::vector<WorleyNoisePoint> worley_noise_points = generateWorleyNoisePoints(worley_noise_settings);
-        for (int pixel_y = 0; pixel_y < worley_noise_texture.height; ++pixel_y)
+        for (int pixel_y = 0; pixel_y < worley_noise_data.height; ++pixel_y)
         {
-            for (int pixel_x = 0; pixel_x < worley_noise_texture.width; ++pixel_x)
+            for (int pixel_x = 0; pixel_x < worley_noise_data.width; ++pixel_x)
             {
                 int grid_x = pixel_x / grid_size;
                 int grid_y = pixel_y / grid_size;
@@ -133,56 +133,40 @@ namespace wng
                 }
 
                 float inverted_value = 1.0f - min_distance;
-                auto pixel_value = static_cast<unsigned char>(inverted_value * 255.0f);
                 unsigned int pixel_index =
                     + pixel_y * worley_noise_settings.width
                     + pixel_x;
-                worley_noise_texture.data.at(pixel_index).data[0] = pixel_value;
-                worley_noise_texture.data.at(pixel_index).data[1] = pixel_value;
-                worley_noise_texture.data.at(pixel_index).data[2] = pixel_value;
-                worley_noise_texture.data.at(pixel_index).data[3] = 255;
+                worley_noise_data.data.at(pixel_index) = inverted_value;
             }
         }
 
-        return worley_noise_texture;
+        return worley_noise_data;
     }
 
-    WorleyNoiseTexture<WorleyNoisePixel> WorleyNoiseGenerator::compositeWorleyNoiseTexture(
-        const std::vector<WorleyNoiseTexture<WorleyNoisePixel>>& worley_noise_textures) const
+    WorleyNoiseData WorleyNoiseGenerator::compositeWorleyNoiseData(
+        const std::vector<WorleyNoiseData>& worley_noise_data_arrays) const
     {
-        WorleyNoiseTexture<WorleyNoisePixel> worley_noise_texture{};
-        worley_noise_texture.width = worley_noise_settings.width;
-        worley_noise_texture.height = worley_noise_settings.height;
-        worley_noise_texture.data = std::vector<WorleyNoisePixel>(worley_noise_texture.width * worley_noise_texture.height);
+        WorleyNoiseData composited_worley_noise_data{};
+        composited_worley_noise_data.width = worley_noise_settings.width;
+        composited_worley_noise_data.height = worley_noise_settings.height;
+        composited_worley_noise_data.data = std::vector<float>(composited_worley_noise_data.width * composited_worley_noise_data.height);
 
-        for (int pixel_y = 0; pixel_y < worley_noise_texture.height; ++pixel_y)
+        for (int pixel_y = 0; pixel_y < composited_worley_noise_data.height; ++pixel_y)
         {
-            for (int pixel_x = 0; pixel_x < worley_noise_texture.width; ++pixel_x)
+            for (int pixel_x = 0; pixel_x < composited_worley_noise_data.width; ++pixel_x)
             {
-                std::array<unsigned int, 4> worley_noise_pixel{};
+                unsigned int pixel_index = pixel_y * composited_worley_noise_data.width + pixel_x;
 
-                unsigned int pixel_index = pixel_y * worley_noise_texture.width + pixel_x;
-                for (auto& texture : worley_noise_textures)
+                composited_worley_noise_data.data[pixel_index] = 0.0f;
+                for (auto& worley_noise_data : worley_noise_data_arrays)
                 {
-                    worley_noise_pixel[0] += static_cast<unsigned int>(texture.data.at(pixel_index).data[0]);
-                    worley_noise_pixel[1] += static_cast<unsigned int>(texture.data.at(pixel_index).data[1]);
-                    worley_noise_pixel[2] += static_cast<unsigned int>(texture.data.at(pixel_index).data[2]);
-                    worley_noise_pixel[3] += static_cast<unsigned int>(texture.data.at(pixel_index).data[3]);
+                    composited_worley_noise_data.data[pixel_index] += worley_noise_data.data[pixel_index];
                 }
 
-                worley_noise_pixel[0] /= worley_noise_textures.size();
-                worley_noise_pixel[1] /= worley_noise_textures.size();
-                worley_noise_pixel[2] /= worley_noise_textures.size();
-                worley_noise_pixel[3] /= worley_noise_textures.size();
-
-                worley_noise_texture.data.at(pixel_index).data[0] = static_cast<unsigned char>(worley_noise_pixel[0]);
-                worley_noise_texture.data.at(pixel_index).data[1] = static_cast<unsigned char>(worley_noise_pixel[1]);
-                worley_noise_texture.data.at(pixel_index).data[2] = static_cast<unsigned char>(worley_noise_pixel[2]);
-                worley_noise_texture.data.at(pixel_index).data[3] = static_cast<unsigned char>(worley_noise_pixel[3]);
+                composited_worley_noise_data.data[pixel_index] /= static_cast<float>(worley_noise_data_arrays.size());
             }
         }
 
-        return worley_noise_texture;
+        return composited_worley_noise_data;
     }
-
 }

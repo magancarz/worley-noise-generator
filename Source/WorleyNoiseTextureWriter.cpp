@@ -28,7 +28,7 @@
 namespace wng
 {
     void WorleyNoiseTextureWriter::saveToPNG(
-        const WorleyNoiseTexture<WorleyNoisePixel>& worley_noise_texture,
+        const WorleyNoiseTexture& worley_noise_texture,
         const std::filesystem::path& file_path)
     {
         stbi_write_png(

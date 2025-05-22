@@ -24,13 +24,14 @@
 
 #include <vector>
 
+#include "WorleyNoisePixel.h"
+
 namespace wng
 {
-    template <typename PixelType>
     struct WorleyNoiseTexture
     {
         int width{0};
         int height{0};
-        std::vector<PixelType> data;
+        std::vector<WorleyNoisePixel> data;
     };
 }

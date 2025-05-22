@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "WorleyNoisePixel.h"
+#include "WorleyNoiseData.h"
 #include "WorleyNoisePoint.h"
 #include "WorleyNoiseSettings.h"
 #include "WorleyNoiseTexture.h"
@@ -34,14 +34,14 @@ namespace wng
     public:
         explicit WorleyNoiseGenerator(const WorleyNoiseSettings& worley_noise_settings);
 
-        [[nodiscard]] WorleyNoiseTexture<WorleyNoisePixel> generate() const;
+        [[nodiscard]] WorleyNoiseData generate() const;
 
     private:
         WorleyNoiseSettings worley_noise_settings;
         [[nodiscard]] static bool settingsValid(const WorleyNoiseSettings& worley_noise_settings);
         [[nodiscard]] std::vector<WorleyNoisePoint> generateWorleyNoisePoints(const WorleyNoiseSettings& worley_noise_settings) const;
-        [[nodiscard]] WorleyNoiseTexture<WorleyNoisePixel> generateTexture(const WorleyNoiseSettings& worley_noise_settings) const;
-        [[nodiscard]] WorleyNoiseTexture<WorleyNoisePixel> compositeWorleyNoiseTexture(
-            const std::vector<WorleyNoiseTexture<WorleyNoisePixel>>& worley_noise_textures) const;
+        [[nodiscard]] WorleyNoiseData generateWorleyNoiseData(const WorleyNoiseSettings& worley_noise_settings) const;
+        [[nodiscard]] WorleyNoiseData compositeWorleyNoiseData(
+            const std::vector<WorleyNoiseData>& worley_noise_data_arrays) const;
     };
 }

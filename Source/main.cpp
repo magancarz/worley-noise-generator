@@ -1,3 +1,4 @@
+#include "WorleyNoiseDataConverter.h"
 #include "WorleyNoiseGenerator.h"
 #include "WorleyNoiseTextureWriter.h"
 
@@ -10,7 +11,9 @@ int main()
     worley_noise_settings.num_of_octaves = 5;
 
     wng::WorleyNoiseGenerator worley_noise_generator{worley_noise_settings};
-    wng::WorleyNoiseTexture<wng::WorleyNoisePixel> worley_noise_texture = worley_noise_generator.generate();
+    wng::WorleyNoiseData worley_noise_data = worley_noise_generator.generate();
+
+    wng::WorleyNoiseTexture worley_noise_texture = wng::WorleyNoiseDataConverter::convert(worley_noise_data);
     std::filesystem::path file_path{"worley_noise_512x512.png"};
     wng::WorleyNoiseTextureWriter::saveToPNG(worley_noise_texture, file_path);
 
