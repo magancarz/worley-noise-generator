@@ -30,9 +30,20 @@ namespace wng
     class WorleyNoiseDataConverter
     {
     public:
-        static WorleyNoiseTexture convert(const WorleyNoiseData& worley_noise_data);
+        WorleyNoiseDataConverter(int width, int height);
+
+        void fillAllChannels(const WorleyNoiseData& worley_noise_data);
+        void fillRedChannel(const WorleyNoiseData& worley_noise_data);
+        void fillGreenChannel(const WorleyNoiseData& worley_noise_data);
+        void fillBlueChannel(const WorleyNoiseData& worley_noise_data);
+        void fillAlphaChannel(const WorleyNoiseData& worley_noise_data);
+        void fillAlphaChannel(unsigned char value);
+
+        [[nodiscard]] const WorleyNoiseTexture& getWorleyNoiseTexture() const { return worley_noise_texture; }
 
     private:
-        static WorleyNoisePixel convertDataToPixel(float worley_noise_data);
+        WorleyNoiseTexture worley_noise_texture;
+
+        static unsigned char convertDataToByteValue(float worley_noise_data);
     };
 }

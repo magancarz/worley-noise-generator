@@ -22,31 +22,77 @@
 
 #include "WorleyNoiseDataConverter.h"
 
+#include <cassert>
+
 namespace wng
 {
-    WorleyNoiseTexture WorleyNoiseDataConverter::convert(const WorleyNoiseData& worley_noise_data)
+    WorleyNoiseDataConverter::WorleyNoiseDataConverter(int width, int height)
+        : worley_noise_texture{.width = width, .height = height, .data = std::vector<WorleyNoisePixel>(width * height)} {}
+
+    void WorleyNoiseDataConverter::fillAllChannels(const WorleyNoiseData& worley_noise_data)
     {
-        WorleyNoiseTexture worley_noise_texture{};
-        worley_noise_texture.width = worley_noise_data.width;
-        worley_noise_texture.height = worley_noise_data.height;
-        worley_noise_texture.data = std::vector<WorleyNoisePixel>(worley_noise_data.width * worley_noise_data.height);
+        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
 
         for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
         {
-            worley_noise_texture.data[index] = convertDataToPixel(worley_noise_data.data[index]);
+            unsigned char byte_value = convertDataToByteValue(worley_noise_data.data[index]);
+            worley_noise_texture.data[index].data[0] = byte_value;
+            worley_noise_texture.data[index].data[1] = byte_value;
+            worley_noise_texture.data[index].data[2] = byte_value;
+            worley_noise_texture.data[index].data[3] = byte_value;
         }
-
-        return worley_noise_texture;
     }
 
-    WorleyNoisePixel WorleyNoiseDataConverter::convertDataToPixel(float worley_noise_data)
+    unsigned char WorleyNoiseDataConverter::convertDataToByteValue(float worley_noise_data)
     {
-        WorleyNoisePixel worley_noise_pixel{};
-        worley_noise_pixel.data[0] = static_cast<unsigned char>(worley_noise_data * 255.0f);
-        worley_noise_pixel.data[1] = static_cast<unsigned char>(worley_noise_data * 255.0f);
-        worley_noise_pixel.data[2] = static_cast<unsigned char>(worley_noise_data * 255.0f);
-        worley_noise_pixel.data[3] = 255;
+        return static_cast<unsigned char>(worley_noise_data * 255.0f);
+    }
 
-        return worley_noise_pixel;
+    void WorleyNoiseDataConverter::fillRedChannel(const WorleyNoiseData& worley_noise_data)
+    {
+        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+
+        for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
+        {
+            worley_noise_texture.data[index].data[0] = convertDataToByteValue(worley_noise_data.data[index]);
+        }
+    }
+
+    void WorleyNoiseDataConverter::fillGreenChannel(const WorleyNoiseData& worley_noise_data)
+    {
+        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+
+        for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
+        {
+            worley_noise_texture.data[index].data[1] = convertDataToByteValue(worley_noise_data.data[index]);
+        }
+    }
+
+    void WorleyNoiseDataConverter::fillBlueChannel(const WorleyNoiseData& worley_noise_data)
+    {
+        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+
+        for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
+        {
+            worley_noise_texture.data[index].data[2] = convertDataToByteValue(worley_noise_data.data[index]);
+        }
+    }
+
+    void WorleyNoiseDataConverter::fillAlphaChannel(const WorleyNoiseData& worley_noise_data)
+    {
+        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+
+        for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
+        {
+            worley_noise_texture.data[index].data[3] = convertDataToByteValue(worley_noise_data.data[index]);
+        }
+    }
+
+    void WorleyNoiseDataConverter::fillAlphaChannel(unsigned char value)
+    {
+        for (auto& pixel : worley_noise_texture.data)
+        {
+            pixel.data[3] = value;
+        }
     }
 }
