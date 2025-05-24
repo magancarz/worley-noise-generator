@@ -30,12 +30,14 @@ namespace wng
     {
         float x{0};
         float y{0};
+        float z{0};
 
-        float distance(const WorleyNoisePoint& other) const
+        [[nodiscard]] float distance(const WorleyNoisePoint& other) const
         {
             float to_other_x = other.x - x;
             float to_other_y = other.y - y;
-            return std::sqrt(to_other_x * to_other_x + to_other_y * to_other_y);
+            float to_other_z = other.z - z;
+            return std::sqrt(to_other_x * to_other_x + to_other_y * to_other_y + to_other_z * to_other_z);
         }
     };
 }

@@ -23,15 +23,28 @@
 #include "WorleyNoiseDataConverter.h"
 
 #include <cassert>
+#include <cstdio>
 
 namespace wng
 {
-    WorleyNoiseDataConverter::WorleyNoiseDataConverter(int width, int height)
-        : worley_noise_texture{.width = width, .height = height, .data = std::vector<WorleyNoisePixel>(width * height)} {}
+    WorleyNoiseDataConverter::WorleyNoiseDataConverter(const WorleyNoiseDataConverterSettings& worley_noise_data_converter_settings)
+        : worley_noise_texture
+        {
+            .width = worley_noise_data_converter_settings.width,
+            .height = worley_noise_data_converter_settings.height,
+            .depth = worley_noise_data_converter_settings.depth,
+            .data = std::vector<WorleyNoisePixel>(
+                worley_noise_data_converter_settings.width *
+                worley_noise_data_converter_settings.height *
+                worley_noise_data_converter_settings.depth)
+        } {}
 
     void WorleyNoiseDataConverter::fillAllChannels(const WorleyNoiseData& worley_noise_data)
     {
-        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+        assert(
+            worley_noise_data.width == worley_noise_texture.width &&
+            worley_noise_data.height == worley_noise_texture.height &&
+            worley_noise_data.depth == worley_noise_texture.depth);
 
         for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
         {
@@ -50,7 +63,10 @@ namespace wng
 
     void WorleyNoiseDataConverter::fillRedChannel(const WorleyNoiseData& worley_noise_data)
     {
-        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+        assert(
+            worley_noise_data.width == worley_noise_texture.width &&
+            worley_noise_data.height == worley_noise_texture.height &&
+            worley_noise_data.depth == worley_noise_texture.depth);
 
         for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
         {
@@ -60,7 +76,10 @@ namespace wng
 
     void WorleyNoiseDataConverter::fillGreenChannel(const WorleyNoiseData& worley_noise_data)
     {
-        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+        assert(
+            worley_noise_data.width == worley_noise_texture.width &&
+            worley_noise_data.height == worley_noise_texture.height &&
+            worley_noise_data.depth == worley_noise_texture.depth);
 
         for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
         {
@@ -70,7 +89,10 @@ namespace wng
 
     void WorleyNoiseDataConverter::fillBlueChannel(const WorleyNoiseData& worley_noise_data)
     {
-        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+        assert(
+            worley_noise_data.width == worley_noise_texture.width &&
+            worley_noise_data.height == worley_noise_texture.height &&
+            worley_noise_data.depth == worley_noise_texture.depth);
 
         for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
         {
@@ -80,7 +102,10 @@ namespace wng
 
     void WorleyNoiseDataConverter::fillAlphaChannel(const WorleyNoiseData& worley_noise_data)
     {
-        assert(worley_noise_data.width == worley_noise_texture.width && worley_noise_data.height == worley_noise_texture.height);
+        assert(
+            worley_noise_data.width == worley_noise_texture.width &&
+            worley_noise_data.height == worley_noise_texture.height &&
+            worley_noise_data.depth == worley_noise_texture.depth);
 
         for (std::size_t index = 0; index < worley_noise_texture.data.size(); ++index)
         {

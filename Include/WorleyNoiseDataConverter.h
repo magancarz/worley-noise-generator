@@ -23,6 +23,7 @@
 #pragma once
 
 #include "WorleyNoiseData.h"
+#include "WorleyNoiseDataConverterSettings.h"
 #include "WorleyNoiseTexture.h"
 
 namespace wng
@@ -30,7 +31,7 @@ namespace wng
     class WorleyNoiseDataConverter
     {
     public:
-        WorleyNoiseDataConverter(int width, int height);
+        explicit WorleyNoiseDataConverter(const WorleyNoiseDataConverterSettings& worley_noise_data_converter_settings);
 
         void fillAllChannels(const WorleyNoiseData& worley_noise_data);
         void fillRedChannel(const WorleyNoiseData& worley_noise_data);

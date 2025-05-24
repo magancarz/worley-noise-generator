@@ -29,14 +29,20 @@ namespace wng
 {
     void WorleyNoiseTextureWriter::saveToPNG(
         const WorleyNoiseTexture& worley_noise_texture,
-        const std::filesystem::path& file_path)
+        const std::filesystem::path& file_name)
     {
-        stbi_write_png(
-            file_path.c_str(),
-            worley_noise_texture.width,
-            worley_noise_texture.height,
-            sizeof(WorleyNoisePixel),
-            worley_noise_texture.data.data(),
-            worley_noise_texture.width * sizeof(WorleyNoisePixel));
+        for (unsigned int current_depth = 0; current_depth < worley_noise_texture.depth; ++current_depth)
+        {
+            std::string final_file_path = file_name.string().append("_").append(std::to_string(current_depth));
+            std::size_t current_starting_index = current_depth * worley_noise_texture.width * worley_noise_texture.height;
+            assert(current_starting_index < worley_noise_texture.data.size());
+            stbi_write_png(
+                final_file_path.c_str(),
+                worley_noise_texture.width,
+                worley_noise_texture.height,
+                sizeof(WorleyNoisePixel),
+                worley_noise_texture.data.data() + current_starting_index,
+                worley_noise_texture.width * sizeof(WorleyNoisePixel));
+        }
     }
 }
