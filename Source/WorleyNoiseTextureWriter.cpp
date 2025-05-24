@@ -22,6 +22,8 @@
 
 #include "WorleyNoiseTextureWriter.h"
 
+#include <fstream>
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -44,5 +46,26 @@ namespace wng
                 worley_noise_texture.data.data() + current_starting_index,
                 worley_noise_texture.width * sizeof(WorleyNoisePixel));
         }
+    }
+
+    void WorleyNoiseTextureWriter::saveAsRawData(
+        const WorleyNoiseTexture& worley_noise_texture,
+        const std::filesystem::path& file_name)
+    {
+        std::ofstream output_file_stream{file_name, std::ios::out};
+        if (!output_file_stream.is_open())
+        {
+            return;
+        }
+
+        output_file_stream.write((char*)&worley_noise_texture.width, sizeof(int));
+        output_file_stream.write((char*)&worley_noise_texture.height, sizeof(int));
+        output_file_stream.write((char*)&worley_noise_texture.depth, sizeof(int));
+        for (const auto& pixel : worley_noise_texture.data)
+        {
+            output_file_stream.write((char*)&pixel, sizeof(WorleyNoisePixel));
+        }
+
+        output_file_stream.close();
     }
 }

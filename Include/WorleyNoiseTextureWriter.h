@@ -33,6 +33,9 @@ namespace wng
     public:
         static void saveToPNG(
             const WorleyNoiseTexture& worley_noise_texture,
-            const std::filesystem::path& file_path);
+            const std::filesystem::path& file_name);
+        static void saveAsRawData(
+            const WorleyNoiseTexture& worley_noise_texture,
+            const std::filesystem::path& file_name);
     };
 }
